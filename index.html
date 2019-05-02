@@ -1,126 +1,10 @@
 <html>
+
 <head>
     <meta charset='utf-8'>
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
-    <script type="text/javascript">
-        google.load("visualization", "1", { packages: ["corechart"] });
-        google.charts.load("current", { packages: ["corechart"],  ignoreWindowOnLoad: false });
-    </script>
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript" src="badge.js"></script>
 
-
-
-    <script type="text/javascript">
-        function drawChart(data, title) {
-            var options = {
-                pieHole: 0.5,
-                pieSliceTextStyle: {
-                    color: 'white',
-                },
-                colors: ['#0a0', '#d4333f'],
-                legend: 'none',
-                enableInteractivity: false
-            };
-            var buildReport = document.getElementById('buildReport');
-            var measurementDiv = document.createElement('div');
-            measurementDiv.style = "float:left; position: relative; display: inline-block; vertical-align: top; text-align: center; box-sizing: border-box; padding: 0 15px; "
-
-            var measurementName = document.createElement('div');
-            measurementName.style = 'font-size: 12px; display: inline-block; vertical-align: top; text-align: center;'
-
-            var measurementNameText = document.createTextNode(title);
-            measurementName.appendChild(measurementNameText);
-
-            var chartDiv = document.createElement('div');
-
-            var chart = document.createElement('div');
-            chart.id = title;
-            chart.style = 'width: 50; height: 50; float:left;';
-
-            chartDiv.appendChild(chart);
-
-            var dataNumber = document.createElement('div');
-            dataNumber.style = "float:left; transform: translateY(50%);"
-            var dataText = document.createTextNode(data.getValue(1, 1) + "%");
-            dataNumber.appendChild(dataText);
-            chartDiv.appendChild(dataNumber);
-
-
-            measurementDiv.appendChild(chartDiv);
-            measurementDiv.appendChild(measurementName);
-            buildReport.appendChild(measurementDiv);
-
-            var wrapper = new google.visualization.ChartWrapper({
-                chartType: 'PieChart',
-                dataTable: data,
-                options: options,
-                containerId: title
-            });
-            wrapper.draw();
-
-        }
-
-        function drawQualityGate(status, name) {
-            var color;
-            if (status == "Warning") {
-                color = '#ed7d20'
-            } else if (status == "Failed") {
-                color = '#d4333f';
-            } else if (status == "Passed") {
-                color = '#0a0'
-            }
-            var title = document.getElementById('title');
-            title.style = "height: 30px;"
-            var projectName = document.createElement('div');
-            projectName.style = "float:left;  margin-left: 20px; margin-right: 20px"
-            var projectNameText = document.createTextNode(name);
-
-            projectName.appendChild(projectNameText);
-
-            var fitDiv = document.createElement('div');
-            fitDiv.style = 'width: 80; float:left;';
-            var qualityGateSpan = document.createElement('div');
-            qualityGateSpan.style = "display: inline-block; float:left; min-width: 70px; height: 24px; line-height: 24px; border-radius: 24px; box-sizing: border-box; color: #fff; letter-spacing: .02em; font-size: 13px; font-weight: 400; text-align: center; text-shadow: 0 0 1px rgba(0,0,0,.35); background-color:" + color;
-            var qualityGateText = document.createTextNode(status);
-            qualityGateSpan.appendChild(qualityGateText);
-            fitDiv.appendChild(qualityGateSpan);
-            title.appendChild(projectName);
-            title.appendChild(fitDiv);
-        }
-
-        function drawQualityNumber(amount, name, status) {
-            var color;
-
-            if (status == 1) {
-                color = '#0a0'
-            } else if (status == 2) {
-                color = '#b0d513';
-            } else if (status == 3) {
-                color = '#eabe06';
-            } else if (status == 4) {
-                color = '#ed7d20'
-            } else if (status == 5) {
-                color = '#d4333f';
-            }
-            var buildReport = document.getElementById('buildReport');
-            var qualityGateDiv = document.createElement('div');
-            qualityGateDiv.style = "min-width: 100px; width: auto; height: 65.8px; float:left; position: relative; display: inline-block; vertical-align: top; text-align: center; box-sizing: border-box; padding-top: 10px; "
-
-            var qualityGateName = document.createElement('div');
-            qualityGateName.style = 'font-size: 12px; width:100%; position: absolute; bottom: 1px; left: 50%; transform: translateX(-50%);'
-            var qualityGateNameText = document.createTextNode(name);
-            qualityGateName.appendChild(qualityGateNameText);
-
-            var qualityGateIndicator = document.createElement('div');
-            qualityGateIndicator.style = "margin: auto; width: 30px; height: 30; line-height: 30px; border-radius: 30px; box-sizing: border-box; color: #fff; letter-spacing: .02em; font-size: 13px; font-weight: 400; text-align: center; text-shadow: 0 0 1px rgba(0,0,0,.35); background-color:" + color;
-            var qualityGateText = document.createTextNode(amount);
-            qualityGateIndicator.appendChild(qualityGateText);
-            qualityGateDiv.appendChild(qualityGateIndicator);
-            qualityGateDiv.append(qualityGateName);
-            buildReport.appendChild(qualityGateDiv);
-        }
-
-    </script>
 </head>
 
 
@@ -131,40 +15,18 @@
 </style>
 
 <body>
-    <div id='badge'>
-        <div id='title'>
+    <div id="badge-Container" style="width:600px; transform: translatez(0);">
 
-        </div>
-        <div id='buildReport'>
-
-        </div>
     </div>
 </body>
+<script type="text/javascript">
+    init();
+    var params = getSearchParameters();
+    for (key in params) {
+        if (key.includes("projectName")) {
+            createBadge(params[key]);
+        }
+    }
+</script>
 
 </html>
-
-<script type="text/javascript">
-
-    var codecoverage = google.visualization.arrayToDataTable([
-        ['Coverage', 'Percentage'],
-        ['Covered', 55],
-        ['Uncovered', 45],
-    ]);
-    var duplications = google.visualization.arrayToDataTable([
-        ['Duplications', 'Percentage'],
-        ['Duplicate', 55],
-        ['Unique', 45],
-    ]);
-    google.charts.load("current", { packages: ["corechart"] });
-    drawQualityGate("Passed", "Project_Name");
-    drawChart(codecoverage, 'Code Coverage');
-    drawChart(duplications, 'Duplications');
-    drawQualityNumber(1, 'Bugs', 1)
-    drawQualityNumber(2, 'Code Smells', 2)
-    drawQualityNumber(3, 'Vulnerabilities', 3)
-
-</script>
-<!-- Coverage                    http://ci.icaprojecten.nl/sonar/api/measures/component?additionalFields=metrics&componentKey=WoR_Test&metricKeys=coverage -->
-<!-- QualityGateStatus           http://ci.icaprojecten.nl/sonar/api/project_branches/list?project=WoR_Test -->
-<!-- Status                      http://ci.icaprojecten.nl/sonar/api/ce/component?componentKey=WoR_Test -->
-<!-- All kinds of data           http://ci.icaprojecten.nl/sonar/api/measures/component?additionalFields=metrics,periods&componentKey=WoR_Test&metricKeys=alert_status,quality_gate_details,bugs,vulnerabilities,code_smells,coverage,tests,duplicated_lines_density -->
