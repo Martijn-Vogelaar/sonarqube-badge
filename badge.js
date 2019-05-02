@@ -179,7 +179,6 @@ function createBadge(projectName) {
                     reliabilityRating = measurements[i].value;
                 } else if (measurements[i].metric == "sqale_rating") {
                     maintainabilityRating = measurements[i].value;
-                    window.alert(maintainabilityRating)
                 } else if (measurements[i].metric == "security_rating") {
                     securityRating = measurements[i].value;
                 } else if (measurements[i].metric == "new_reliability_rating") {
