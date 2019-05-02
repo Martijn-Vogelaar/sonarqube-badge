@@ -3,6 +3,7 @@
 <head>
     <meta charset='utf-8'>
     <script src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
     <script type="text/javascript" src="badge.js"></script>
 
 </head>
@@ -11,6 +12,7 @@
 <style>
     * {
         font-family: sans-serif;
+        color: #000000;
     }
 </style>
 
@@ -20,7 +22,7 @@
     </div>
 </body>
 <script type="text/javascript">
-    init();
+    google.charts.load('current', { packages: ["corechart"] });
     var params = getSearchParameters();
     for (key in params) {
         if (key.includes("projectName")) {

@@ -1,8 +1,3 @@
-function init() {
-    google.charts.load("current", { packages: ["corechart"]});
-}
-
-
 function drawChart(projectName, data, title, percentageShown) {
     var options = {
         pieHole: 0.5,
@@ -18,7 +13,7 @@ function drawChart(projectName, data, title, percentageShown) {
     measurementDiv.style = "float:left; position: relative; display: inline-block; vertical-align: top; text-align: center; box-sizing: border-box; padding: 0 15px; "
 
     var measurementName = document.createElement('div');
-    measurementName.style = 'font-size: 12px; display: inline-block; vertical-align: top; text-align: center;'
+    measurementName.style = 'font-size: 13px; display: inline-block; vertical-align: top; text-align: center;'
 
     var measurementNameText = document.createTextNode(title);
     measurementName.appendChild(measurementNameText);
@@ -26,7 +21,7 @@ function drawChart(projectName, data, title, percentageShown) {
     var chartDiv = document.createElement('div');
 
     var chart = document.createElement('div');
-    chart.id = title;
+    chart.id = projectName + title;
     chart.style = 'width: 50; height: 50; float:left;';
 
     chartDiv.appendChild(chart);
@@ -46,16 +41,13 @@ function drawChart(projectName, data, title, percentageShown) {
         chartType: 'PieChart',
         dataTable: data,
         options: options,
-        containerId: title
+        containerId: projectName + title
     });
-    wrapper.draw();
-    wrapper.draw();
-    wrapper.draw();
     wrapper.draw();
 
 }
 
-function drawQualityGate(projectName, status, name) {
+function drawQualityGate(projectName, status) {
     var color;
     if (status == "WARN") {
         color = '#ed7d20';
@@ -66,15 +58,18 @@ function drawQualityGate(projectName, status, name) {
     } else if (status == "OK") {
         color = '#0a0';
         status = 'Passed';
+    } else if (status == "Not found") {
+        color = '#d4333f';
+        status = 'Not found';
     }
 
     var title = document.getElementById(projectName + '-title');
     title.style = "height: 30px;"
-    var projectName = document.createElement('div');
-    projectName.style = "float:left;  margin-left: 20px; margin-right: 20px"
-    var projectNameText = document.createTextNode(name);
+    var projectNameDiv = document.createElement('div');
+    projectNameDiv.style = "float:left;  margin-left: 20px; margin-right: 20px"
+    var projectNameText = document.createTextNode(projectName);
 
-    projectName.appendChild(projectNameText);
+    projectNameDiv.appendChild(projectNameText);
 
     var fitDiv = document.createElement('div');
     fitDiv.style = 'width: 80; float:left;';
@@ -84,7 +79,7 @@ function drawQualityGate(projectName, status, name) {
     qualityGateSpan.appendChild(qualityGateText);
     fitDiv.appendChild(qualityGateSpan);
     title.appendChild(fitDiv);
-    title.appendChild(projectName);
+    title.appendChild(projectNameDiv);
 
 }
 
@@ -107,7 +102,7 @@ function drawQualityNumber(projectName, amount, name, status) {
     qualityGateDiv.style = "min-width: 100px; width: auto; height: 65.8px; float:left; position: relative; display: inline-block; vertical-align: top; text-align: center; box-sizing: border-box; padding-top: 10px; "
 
     var qualityGateName = document.createElement('div');
-    qualityGateName.style = 'font-size: 12px; width:100%; position: absolute; bottom: 1px; left: 50%; transform: translateX(-50%);'
+    qualityGateName.style = 'font-size: 13px; width:100%; position: absolute; bottom: 1px; left: 50%; transform: translateX(-50%);'
     var qualityGateNameText = document.createTextNode(name);
     qualityGateName.appendChild(qualityGateNameText);
 
@@ -123,14 +118,19 @@ function drawQualityNumber(projectName, amount, name, status) {
 
 function createBadge(projectName) {
 
+
     var badge = document.createElement('div');
     badge.id = projectName + '-badge';
     badge.style = " margin-top: 20px;";
 
+    var link = document.createElement('a');
+    link.style = "display:block color: #000000";
+    link.href = "http://ci.icaprojecten.nl/sonar/dashboard?id=" + projectName;
+    link.appendChild(badge);
+
     var title = document.createElement('div');
     title.id = projectName + '-title'
     badge.appendChild(title);
-
     var buildReport = document.createElement('div');
     buildReport.id = projectName + '-buildReport';
     buildReport.style = "height:70px;";
@@ -139,9 +139,10 @@ function createBadge(projectName) {
     var line = document.createElement('div');
     line.style = "display:block; border:none; color:white;height:1px;background:black;background: -webkit-gradient(radial, 50% 50%, 0, 50% 50%, 350, from(#000), to(#fff));"
     badge.appendChild(line);
-    document.getElementById("badge-Container").appendChild(badge);
+    document.getElementById("badge-Container").appendChild(link);
 
     var xmlhttp = new XMLHttpRequest();
+    var retryCount = 0;
     xmlhttp.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
             var projectStats = JSON.parse(this.responseText);
@@ -151,6 +152,12 @@ function createBadge(projectName) {
 
             var coverage = 0;//                         coverage
             var bugs = 0;//                             bugs
+            var reliabilityRating = 0;//                Bugs
+            var newReliabilityRating = 0;//                Bugs
+            var newMaintainabilityRating = 0;
+            var maintainabilityRating = 0;//            CodeSmells
+            var newSecurityRating = 0;//                   Vulnerabilities
+            var securityRating = 0;//                   Vulnerabilities
             var vulnerabilities = 0;//                  vulnerabilities
             var codeSmells = 0; //                      code_smells
             var qualityGate = "ERROR" //WARN  && OK     alert_status
@@ -168,7 +175,29 @@ function createBadge(projectName) {
                     qualityGate = measurements[i].value;
                 } else if (measurements[i].metric == "duplicated_lines_density") {
                     duplicatedLines = measurements[i].value;
+                } else if (measurements[i].metric == "reliability_rating") {
+                    reliabilityRating = measurements[i].value;
+                } else if (measurements[i].metric == "sqale_rating") {
+                    maintainabilityRating = measurements[i].value;
+                    window.alert(maintainabilityRating)
+                } else if (measurements[i].metric == "security_rating") {
+                    securityRating = measurements[i].value;
+                } else if (measurements[i].metric == "new_reliability_rating") {
+                    newReliabilityRating = measurements[i].periods[0].value;
+                } else if (measurements[i].metric == "new_maintainability_rating") {
+                    newMaintainabilityRating = measurements[i].periods[0].value;
+                } else if (measurements[i].metric == "new_security_rating") {
+                    newSecurityRating = measurements[i].periods[0].value;
                 }
+            }
+            if(reliabilityRating == 0){
+                reliabilityRating = newReliabilityRating;
+            }
+            if(securityRating == 0){
+                securityRating = newSecurityRating;
+            }
+            if(maintainabilityRating == 0){
+                maintainabilityRating = newMaintainabilityRating;
             }
             var codecoverage = google.visualization.arrayToDataTable([
                 ['Coverage', 'Percentage'],
@@ -180,19 +209,20 @@ function createBadge(projectName) {
                 ['Unique', 100 - parseFloat(duplicatedLines, 10)],
                 ['Duplicated', parseFloat(duplicatedLines, 10)],
             ]);
-
-
-
-            google.charts.load("current", { packages: ["corechart"] });
-            drawQualityGate(projectName, qualityGate, projectName);
+            drawQualityGate(projectName, qualityGate);
             drawChart(projectName, codecoverage, 'Code Coverage', coverage);
             drawChart(projectName, duplications, 'Duplications', duplicatedLines);
-            drawQualityNumber(projectName, bugs, 'Bugs', 1)
-            drawQualityNumber(projectName, codeSmells, 'Code Smells', 2)
-            drawQualityNumber(projectName, vulnerabilities, 'Vulnerabilities', 3)
+            drawQualityNumber(projectName, bugs, 'Bugs', reliabilityRating);
+            drawQualityNumber(projectName, codeSmells, 'Code Smells', maintainabilityRating);
+            drawQualityNumber(projectName, vulnerabilities, 'Vulnerabilities', securityRating);
+        } else if (this.status == 404 && retryCount == 3) {
+            drawQualityGate(projectName, "Not found");
+            buildReport.style = "";
+        } else {
+            retryCount++;
         }
     };
-    xmlhttp.open("GET", "https://cors-anywhere.herokuapp.com/http://ci.icaprojecten.nl/sonar/api/measures/component?additionalFields=&componentKey=" + projectName + "&metricKeys=alert_status,quality_gate_details,bugs,vulnerabilities,code_smells,coverage,tests,duplicated_lines_density,duplicated_blocks&format=json", true);
+    xmlhttp.open("GET", "https://cors-anywhere.herokuapp.com/http://ci.icaprojecten.nl/sonar/api/measures/component?additionalFields=&componentKey=" + projectName + "&metricKeys=alert_status,quality_gate_details,bugs,vulnerabilities,code_smells,coverage,tests,duplicated_lines_density,duplicated_blocks,reliability_rating,new_reliability_rating,sqale_rating,new_maintainability_rating,new_security_rating,security_rating&format=json", true);
     xmlhttp.send();
 }
 
@@ -201,12 +231,16 @@ function getSearchParameters() {
     return prmstr != null && prmstr != "" ? transformToAssocArray(prmstr) : {};
 }
 
-function transformToAssocArray( prmstr ) {
-  var params = {};
-  var prmarr = prmstr.split("&");
-  for ( var i = 0; i < prmarr.length; i++) {
-      var tmparr = prmarr[i].split("=");
-      params[tmparr[0]] = tmparr[1];
-  }
-  return params;
+function transformToAssocArray(prmstr) {
+    var params = {};
+    var prmarr = prmstr.split("&");
+    for (var i = 0; i < prmarr.length; i++) {
+        var tmparr = prmarr[i].split("=");
+        params[tmparr[0]] = tmparr[1];
+    }
+    return params;
 }
+
+
+
+//file:///home/martijn/Desktop/htmltest/index.html?projectName1=WoR_Test&projectName2=WoR_as&projectName3=nl.han.oose.reims&projectName4=nl.ica.oose.reims&projectName5=org.han.ica.asd.c.beergame.pipeline.pr
